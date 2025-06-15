@@ -1,108 +1,106 @@
 section .data
-    msg db "escreve 3 numeros inteiros:", 0xA      ; Mensagem inicial para o usuário
-    tan_msg equ $ - msg                            ; Tamanho da mensagem acima
-    maior db "O maior é:", 0xA                     ; Mensagem para indicar o maior número
-    tan_maior equ $ - maior                        ; Tamanho da mensagem "O maior é:"
+    msg db "escreve 3 numeros inteiros:", 0xA
+    tan_msg equ $ - msg
+
+    maior db "O maior é:", 0xA
+    tan_maior equ $ - maior
 
 section .bss
-    num1 resb 32      ; Reserva 32 bytes para armazenar o primeiro número digitado
-    num2 resb 32      ; Reserva 32 bytes para o segundo número
-    num3 resb 32      ; Reserva 32 bytes para o terceiro número
+    A resb 32
+    B resb 32
+    C resb 32
 
 section .text
-    global _start     ; Ponto de entrada do programa
+    global _start
 
 _start:
 
-    ; Escreve mensagem inicial na tela
-    mov rax, 1            ; syscall write
-    mov rdi, 1            ; stdout (saída padrão)
-    mov rsi, msg          ; ponteiro para a mensagem
-    mov rdx, tan_msg      ; tamanho da mensagem
+    ;-----Escreve mensagem inicial----
+    mov rax, 1
+    mov rdi, 1
+    mov rsi, msg
+    mov rdx, tan_msg
     syscall
 
-    ; -------- LEITURA DE num1 ----------
-    mov rax, 0            ; syscall read
-    mov rdi, 0            ; stdin (entrada padrão)
-    mov rsi, num1         ; buffer onde armazenar
-    mov rdx, 32           ; até 32 bytes
-    syscall
-    mov r8, rax           ; salva a quantidade de bytes lidos
-
-    ; -------- LEITURA DE num2 ----------
+    ; -------- LEITURA DE A ----------
     mov rax, 0
     mov rdi, 0
-    mov rsi, num2
+    mov rsi, A
     mov rdx, 32
     syscall
-    mov r9, rax           ; salva bytes lidos de num2
+    mov r8, rax
 
-    ; -------- LEITURA DE num3 ----------
+    ; -------- LEITURA DE B ----------
     mov rax, 0
     mov rdi, 0
-    mov rsi, num3
+    mov rsi, B
     mov rdx, 32
     syscall
-    mov r10, rax          ; salva bytes lidos de num3
+    mov r9, rax
+
+    ; -------- LEITURA DE C ----------
+    mov rax, 0
+    mov rdi, 0
+    mov rsi, C
+    mov rdx, 32
+    syscall
+    mov r10, rax
 
     ; -------- CONVERSÃO DE STRINGS PARA INTEIROS ----------
-    mov rsi, num1
-    call atoi             ; converte num1 (string) para inteiro
-    mov r11, rax          ; r11 ← valor inteiro de num1
-
-    mov rsi, num2
+    mov rsi, A
     call atoi
-    mov r12, rax          ; r12 ← valor inteiro de num2
+    mov r11, rax
 
-    mov rsi, num3
+    mov rsi, B
     call atoi
-    mov r13, rax          ; r13 ← valor inteiro de num3
+    mov r12, rax
+
+    mov rsi, C
+    call atoi
+    mov r13, rax
 
     ; -------- ENCONTRANDO O MAIOR NÚMERO ----------
-    mov r14, r11          ; r14 ← valor máximo (inicialmente num1)
-    mov r15, num1         ; r15 ← ponteiro para string do número atual
-    mov rbx, r8           ; rbx ← tamanho da string de num1
+    mov r14, r11
+    mov r15, A
+    mov rbx, r8
 
-    ; Se num2 > r14, atualiza maior
     cmp r12, r14
-    jg .num2_maior
+    jg .B_maior
 
 .continue1:
-    ; Se num3 > r14, atualiza maior
     cmp r13, r14
-    jg .num3_maior
+    jg .C_maior
     jmp .escreve_maior
 
-.num2_maior:
-    mov r14, r12          ; atualiza maior para num2
-    mov r15, num2
+.B_maior:
+    mov r14, r12
+    mov r15, B
     mov rbx, r9
     jmp .continue1
 
-.num3_maior:
-    mov r14, r13          ; atualiza maior para num3
-    mov r15, num3
+.C_maior:
+    mov r14, r13
+    mov r15, C
     mov rbx, r10
 
 .escreve_maior:
-    ; Escreve mensagem "O maior é:"
+    ;--------Escreve "O maior é:"--------
     mov rax, 1
     mov rdi, 1
     mov rsi, maior
     mov rdx, tan_maior
     syscall
 
-    ; Escreve string do número que é o maior
+    ;--------Escreve o número maior------
     mov rax, 1
     mov rdi, 1
-    mov rsi, r15          ; ponteiro para string
-    mov rdx, rbx          ; tamanho da string
+    mov rsi, r15
+    mov rdx, rbx
     syscall
 
 fim:
-    ; Encerra o programa
-    mov rax, 60           ; syscall exit
-    xor rdi, rdi          ; código de saída 0
+    mov rax, 60
+    xor rdi, rdi
     syscall
 
 ; --------------------------------------
@@ -111,26 +109,26 @@ fim:
 ; Saída:  RAX ← valor inteiro (ex: 123)
 ; --------------------------------------
 atoi:
-    xor rax, rax          ; zera acumulador
-    xor rcx, rcx          ; índice na string = 0
+    xor rax, rax
+    xor rcx, rcx
 .next_char:
-    mov bl, byte [rsi + rcx]  ; pega caractere atual
+    mov bl, byte [rsi + rcx]
 
-    cmp bl, 10            ; é '\n' (Enter)?
-    je .done              ; fim da conversão
+    cmp bl, 10
+    je .done
 
-    cmp bl, '0'           ; menor que '0'?
-    jl .done              ; fim
+    cmp bl, '0'
+    jl .done
 
-    cmp bl, '9'           ; maior que '9'?
-    jg .done              ; fim
+    cmp bl, '9'
+    jg .done
 
-    sub bl, '0'           ; converte char ASCII para número
-    imul rax, rax, 10     ; rax *= 10
-    add rax, rbx          ; rax += novo dígito
+    sub bl, '0'
+    imul rax, rax, 10
+    add rax, rbx
 
-    inc rcx               ; próximo caractere
+    inc rcx
     jmp .next_char
 
 .done:
-    ret                   ; retorna valor em rax
+    ret
