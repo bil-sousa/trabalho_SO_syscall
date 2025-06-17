@@ -1,21 +1,22 @@
-;nasm -f elf64 -o hello.o hello.asm
-;ld -o hello hello.o
+; hello.asm - Exibe "Hello World!" no terminal usando syscalls
+; Compile com:
+; nasm -f elf64 hello.asm -o hello.o
+; ld hello.o -o hello
 
 section .data
-msg db 'Hello World!', 0xA ;output string (0xA = "\n")
-len equ 13 ; string size
+    msg db 'Hello World!', 0xA   ; Mensagem + nova linha
+    len equ $ - msg              ; Calcula o tamanho da string (13 bytes)
 
 section .text
-
-global _start
+    global _start
 
 _start:
-mov rax, 1 ; syscall opcode (1: write)
-mov rdi, 1 ; file descriptor (1: stdout)
-mov rsi, msg ; data to write
-mov rdx, len ; number of bytes to write
-syscall ; make syscall
+    mov rax, 1       ; syscall: write
+    mov rdi, 1       ; stdout (descritor de arquivo 1)
+    mov rsi, msg     ; endereço da mensagem
+    mov rdx, len     ; tamanho da mensagem
+    syscall          ; chama write(1, msg, len)
 
-mov rax, 60 ; syscall opcode (60: _exit)
-mov rdi, 0 ; exit status (0: no error)
-syscall ; make syscall
+    mov rax, 60      ; syscall: exit
+    mov rdi, 0       ; código de saída 0 (sucesso)
+    syscall          ; chama exit(0)
